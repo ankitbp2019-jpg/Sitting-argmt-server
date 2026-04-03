@@ -1,34 +1,21 @@
-// Base model structure
-// This file can be extended with database connections and model definitions
+import { Branch } from './Branch.js';
+import { EnrollmentRange } from './EnrollmentRange.js';
+import { Schedule } from './Schedule.js';
+import { SeatMapping } from './SeatMapping.js';
+import { SeatingPlan } from './SeatingPlan.js';
 
-export class BaseModel {
-  constructor(data = {}) {
-    Object.assign(this, data);
-  }
+export {
+  Branch,
+  EnrollmentRange,
+  Schedule,
+  SeatMapping,
+  SeatingPlan
+};
 
-  toJSON() {
-    return { ...this };
-  }
-
-  static async findAll() {
-    // To be implemented with actual database logic
-    throw new Error('Method not implemented');
-  }
-
-  static async findById(id) {
-    // To be implemented with actual database logic
-    throw new Error('Method not implemented');
-  }
-
-  async save() {
-    // To be implemented with actual database logic
-    throw new Error('Method not implemented');
-  }
-
-  async delete() {
-    // To be implemented with actual database logic
-    throw new Error('Method not implemented');
-  }
-}
-
-export default BaseModel;
+export default {
+  Branch,
+  EnrollmentRange,
+  Schedule,
+  SeatMapping,
+  SeatingPlan
+};

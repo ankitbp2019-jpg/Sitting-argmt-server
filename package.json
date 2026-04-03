@@ -8,15 +8,24 @@
     "dev": "nodemon server.js",
     "start": "node server.js"
   },
-  "keywords": ["nodejs", "express", "mvc", "api", "backend"],
+  "keywords": [
+    "nodejs",
+    "express",
+    "mvc",
+    "api",
+    "backend"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.18.2",
     "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
     "helmet": "^7.1.0",
+    "joi": "^18.1.2",
+    "mongoose": "^9.3.3",
     "morgan": "^1.10.0",
-    "dotenv": "^16.3.1"
+    "winston": "^3.19.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"

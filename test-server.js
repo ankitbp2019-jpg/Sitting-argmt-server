@@ -1,13 +1,11 @@
 import 'dotenv/config';
 import app from './src/app.js';
 import { config } from './src/config/index.js';
-import { connectDB } from './src/config/db.js';
 import { logger } from './src/utils/logger.js';
 
+// Skip DB connection for validation testing
 const startServer = async () => {
   try {
-    // Connect to database
-    await connectDB();
     const server = app.listen(config.port, () => {
       logger.info(`Server running on port ${config.port} in ${config.nodeEnv} mode`);
     });

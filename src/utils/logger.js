@@ -1,26 +1,47 @@
-// Logger utility
-export const logger = {
-  info: (message, ...args) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[INFO] ${new Date().toISOString()}: ${message}`, ...args);
-    }
-  },
-  
-  error: (message, ...args) => {
-    console.error(`[ERROR] ${new Date().toISOString()}: ${message}`, ...args);
-  },
-  
-  warn: (message, ...args) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.warn(`[WARN] ${new Date().toISOString()}: ${message}`, ...args);
-    }
-  },
-  
-  debug: (message, ...args) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.debug(`[DEBUG] ${new Date().toISOString()}: ${message}`, ...args);
-    }
-  }
-};
+import winston from 'winston';
+import path from 'path';
+
+// Create logs directory if it doesn't exist
+const logsDir = path.join(process.cwd(), 'logs');
+
+// Define log format
+const logFormat = winston.format.combine(
+  winston.format.timestamp(),
+  winston.format.errors({ stack: true }),
+  winston.format.json()
+);
+
+// Create logger
+export const logger = winston.createLogger({
+  level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+  format: logFormat,
+  defaultMeta: { service: 'seating-generator-server' },
+  transports: [
+    // Write all logs to combined.log
+    new winston.transports.File({
+      filename: path.join(logsDir, 'combined.log'),
+      maxsize: 5242880, // 5MB
+      maxFiles: 5
+    }),
+    
+    // Write error logs to error.log
+    new winston.transports.File({
+      filename: path.join(logsDir, 'error.log'),
+      level: 'error',
+      maxsize: 5242880, // 5MB
+      maxFiles: 5
+    })
+  ]
+});
+
+// Add console transport for non-production environments
+if (process.env.NODE_ENV !== 'production') {
+  logger.add(new winston.transports.Console({
+    format: winston.format.combine(
+      winston.format.colorize(),
+      winston.format.simple()
+    )
+  }));
+}
 
 export default logger;
