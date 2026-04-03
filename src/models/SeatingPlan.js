@@ -25,6 +25,11 @@ const seatingPlanSchema = new mongoose.Schema({
       message: 'Session must be morning, afternoon, or evening'
     }
   },
+  cloudinaryUrl: {
+    type: String,
+    trim: true,
+    default: null
+  },
   rooms: [{
     roomNumber: {
       type: String,

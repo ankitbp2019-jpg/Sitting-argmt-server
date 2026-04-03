@@ -1,9 +1,16 @@
 import express from 'express';
-import { createSeatingPlan, getSeatingPlanBySchedule, updateSeatAssignment, clearSeatAssignment } from '../controllers/seatingController.js';
+import { createSeatingPlan, getSeatingPlanBySchedule, getAllSeatingPlans, updateSeatAssignment, clearSeatAssignment, downloadSeatingPlanPDF } from '../controllers/seatingController.js';
 import { validate } from '../middlewares/validate.middleware.js';
 import { body, param } from 'express-validator';
 
 const router = express.Router();
+
+/**
+ * @route   GET /api/seating
+ * @desc    Get all seating plans
+ * @access  Private
+ */
+router.get('/', getAllSeatingPlans);
 
 /**
  * @route   POST /api/seating/generate
@@ -127,6 +134,23 @@ router.delete('/seat',
   ],
   validate,
   clearSeatAssignment
+);
+
+/**
+ * @route   GET /api/seating/pdf/:id
+ * @desc    Download seating plan as PDF
+ * @access  Private
+ */
+router.get('/pdf/:id',
+  [
+    param('id')
+      .notEmpty()
+      .withMessage('Seating plan ID is required')
+      .isMongoId()
+      .withMessage('Invalid seating plan ID format')
+  ],
+  validate,
+  downloadSeatingPlanPDF
 );
 
 export default router;

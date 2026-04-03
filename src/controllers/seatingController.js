@@ -61,11 +61,24 @@ export const createSeatingPlan = asyncHandler(async (req, res) => {
     // 4. Update seating plan with actual schedule data
     seatingPlan.date = schedule.date;
     seatingPlan.session = schedule.session;
+
+    // 5. Upload seating plan to Cloudinary
+    try {
+      const { uploadSeatingPlan } = await import('../services/cloudinary.service.js');
+      const cloudinaryUrl = await uploadSeatingPlan(seatingPlan, seatingPlan._id.toString());
+      seatingPlan.cloudinaryUrl = cloudinaryUrl;
+      logger.info(`Seating plan uploaded to Cloudinary: ${cloudinaryUrl}`);
+    } catch (cloudinaryError) {
+      logger.error('Cloudinary upload failed:', cloudinaryError);
+      // Continue without failing - Cloudinary is not critical
+      seatingPlan.cloudinaryUrl = null;
+    }
+
     await seatingPlan.save();
 
     logger.info(`Seating plan created successfully for schedule: ${scheduleId}`);
 
-    // 5. Return success response
+    // 6. Return success response
     return res.status(201).json(
       new ApiResponse(201, {
         seatingPlan: {
@@ -74,6 +87,7 @@ export const createSeatingPlan = asyncHandler(async (req, res) => {
           date: seatingPlan.date,
           session: seatingPlan.session,
           rooms: seatingPlan.rooms,
+          cloudinaryUrl: seatingPlan.cloudinaryUrl,
           totalSeats: seatingPlan.totalSeats,
           assignedSeats: seatingPlan.assignedSeats,
           emptySeats: seatingPlan.emptySeats
@@ -278,9 +292,102 @@ export const clearSeatAssignment = asyncHandler(async (req, res) => {
   }
 });
 
+/**
+ * Get all seating plans
+ * @route GET /api/seating
+ * @access Private
+ */
+export const getAllSeatingPlans = asyncHandler(async (req, res) => {
+  try {
+    logger.info('Fetching all seating plans');
+
+    const { SeatingPlan } = await import('../models/index.js');
+    
+    // Fetch all seating plans, sorted by date (latest first)
+    const seatingPlans = await SeatingPlan.find()
+      .sort({ date: -1 })
+      .select('_id date session rooms seats createdAt')
+      .lean();
+
+    // Format response
+    const formattedPlans = seatingPlans.map(plan => ({
+      id: plan._id,
+      date: plan.date,
+      session: plan.session,
+      totalRooms: plan.rooms?.length || 0,
+      totalStudents: plan.seats?.filter(seat => seat.status === 'assigned').length || 0,
+      totalSeats: plan.seats?.length || 0,
+      createdAt: plan.createdAt
+    }));
+
+    logger.info(`Retrieved ${formattedPlans.length} seating plans`);
+
+    return res.status(200).json(
+      new ApiResponse(200, {
+        plans: formattedPlans,
+        total: formattedPlans.length
+      }, 'Seating plans retrieved successfully')
+    );
+
+  } catch (error) {
+    logger.error('Error fetching seating plans:', error);
+
+    return res.status(500).json(
+      new ApiResponse(500, null, 'Internal server error while fetching seating plans')
+    );
+  }
+});
+
+/**
+ * Download seating plan as PDF
+ * @route GET /api/seating/pdf/:id
+ * @access Private
+ */
+export const downloadSeatingPlanPDF = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    logger.info(`Generating PDF for seating plan: ${id}`);
+
+    const { SeatingPlan } = await import('../models/index.js');
+    const { generateSeatingPlanPDF } = await import('../services/pdf.service.js');
+
+    // Find seating plan
+    const seatingPlan = await SeatingPlan.findById(id);
+
+    if (!seatingPlan) {
+      return res.status(404).json(
+        new ApiResponse(404, null, 'Seating plan not found')
+      );
+    }
+
+    // Generate PDF
+    const pdfBuffer = await generateSeatingPlanPDF(seatingPlan);
+
+    // Set headers for PDF download
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="seating-plan-${id}.pdf"`);
+    res.setHeader('Content-Length', pdfBuffer.length);
+
+    logger.info(`PDF generated successfully for seating plan: ${id}`);
+
+    // Send PDF
+    return res.send(pdfBuffer);
+
+  } catch (error) {
+    logger.error(`Error generating PDF for seating plan ${id}:`, error);
+
+    return res.status(500).json(
+      new ApiResponse(500, null, 'Internal server error while generating PDF')
+    );
+  }
+});
+
 export default {
   createSeatingPlan,
   getSeatingPlanBySchedule,
+  getAllSeatingPlans,
   updateSeatAssignment,
-  clearSeatAssignment
+  clearSeatAssignment,
+  downloadSeatingPlanPDF
 };
