@@ -241,12 +241,12 @@ export const updateSeatAssignment = asyncHandler(async (req, res) => {
 });
 
 /**
- * Clear seat assignment
- * @route DELETE /api/seating/seat
+ * Clear seat assignment with auto-rearrange
+ * @route DELETE /seating/seat
  * @access Private
  */
 export const clearSeatAssignment = asyncHandler(async (req, res) => {
-  const { scheduleId, seatNumber } = req.body;
+  const { scheduleId, seatNumber, autoRearrange = true } = req.body;
 
   if (!scheduleId || !seatNumber) {
     return res.status(400).json(
@@ -255,13 +255,14 @@ export const clearSeatAssignment = asyncHandler(async (req, res) => {
   }
 
   try {
-    logger.info(`Clearing seat assignment: ${seatNumber}`);
+    logger.info(`Clearing seat assignment: ${seatNumber}, autoRearrange: ${autoRearrange}`);
 
-    const { clearSeatAssignment: clearSeat } = await import('../services/seatingGenerator.service.js');
+    const { clearSeatWithRearrange } = await import('../services/seating.service.js');
 
-    const updatedSeatingPlan = await clearSeat({
+    const result = await clearSeatWithRearrange({
       scheduleId,
-      seatNumber
+      seatNumber,
+      autoRearrange
     });
 
     logger.info(`Seat assignment cleared successfully`);
@@ -269,12 +270,16 @@ export const clearSeatAssignment = asyncHandler(async (req, res) => {
     return res.status(200).json(
       new ApiResponse(200, {
         seatingPlan: {
-          id: updatedSeatingPlan._id,
-          seats: updatedSeatingPlan.seats,
-          assignedSeats: updatedSeatingPlan.assignedSeats,
-          emptySeats: updatedSeatingPlan.emptySeats
-        }
-      }, 'Seat assignment cleared successfully')
+          id: result.seatingPlan._id,
+          seats: result.seatingPlan.seats,
+          assignedSeats: result.seatingPlan.assignedSeats,
+          emptySeats: result.seatingPlan.emptySeats
+        },
+        rearrangements: result.rearrangements || []
+      }, autoRearrange && result.rearrangements?.length > 0 
+        ? `Seat cleared and ${result.rearrangements.length} students rearranged`
+        : 'Seat assignment cleared successfully'
+      )
     );
 
   } catch (error) {

@@ -18,11 +18,11 @@ const branchSchema = new mongoose.Schema({
 }, {
   timestamps: true,
   toJSON: { virtuals: true },
-  toObject: { virtuals: true }
+  toObject: { virtuals: true },
+  autoIndex: false  // Disable automatic index creation - NO INDEXES
 });
 
-// Index for faster queries
-branchSchema.index({ code: 1 }, { unique: true });
+// REMOVED ALL INDEXES - No indexing as requested
 
 // Virtual for formatted display
 branchSchema.virtual('formatted').get(function() {

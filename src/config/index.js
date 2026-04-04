@@ -14,9 +14,22 @@ const validateEnvVars = () => {
   const missing = requiredEnvVars.filter(varName => !process.env[varName]);
   
   if (missing.length > 0) {
+    const isDevelopment = process.env.NODE_ENV !== 'production';
     const errorMessage = `Missing required environment variables: ${missing.join(', ')}`;
-    logger.error(errorMessage);
-    throw new Error(errorMessage);
+    
+    if (isDevelopment) {
+      logger.warn(`${errorMessage} - Using placeholder values for development`);
+      // Set placeholder values for development
+      if (!process.env.MONGODB_URI) {
+        process.env.MONGODB_URI = 'mongodb://localhost:27017/seating-generator-dev';
+      }
+      if (!process.env.JWT_SECRET) {
+        process.env.JWT_SECRET = 'dev-secret-do-not-use-in-production';
+      }
+    } else {
+      logger.error(errorMessage);
+      throw new Error(errorMessage);
+    }
   }
   
   // Warn about optional but recommended variables

@@ -45,23 +45,11 @@ const seatMappingSchema = new mongoose.Schema({
 }, {
   timestamps: true,
   toJSON: { virtuals: true },
-  toObject: { virtuals: true }
+  toObject: { virtuals: true },
+  autoIndex: false  // Disable automatic index creation - NO INDEXES
 });
 
-// Composite unique index for enrollment + schedule
-seatMappingSchema.index({ enrollmentNumber: 1, scheduleId: 1 }, { unique: true });
-
-// Compound index for room layout queries
-seatMappingSchema.index({ roomNumber: 1, row: 1, col: 1 });
-
-// Unique index to prevent duplicate seat assignments in same room
-seatMappingSchema.index({ roomNumber: 1, row: 1, col: 1 }, { unique: true });
-
-// Index for schedule-based queries
-seatMappingSchema.index({ scheduleId: 1 });
-
-// Compound index for schedule + room queries
-seatMappingSchema.index({ scheduleId: 1, roomNumber: 1 });
+// REMOVED ALL INDEXES - No indexing as requested
 
 // Virtual for formatted seat position
 seatMappingSchema.virtual('formattedSeat').get(function() {

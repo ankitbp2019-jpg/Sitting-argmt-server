@@ -51,20 +51,11 @@ const scheduleSchema = new mongoose.Schema({
 }, {
   timestamps: true,
   toJSON: { virtuals: true },
-  toObject: { virtuals: true }
+  toObject: { virtuals: true },
+  autoIndex: false  // Disable automatic index creation - NO INDEXES
 });
 
-// Index for date-based queries
-scheduleSchema.index({ date: 1 });
-
-// Index for college-based queries
-scheduleSchema.index({ collegeCode: 1 });
-
-// Compound index for unique schedule identification
-scheduleSchema.index({ date: 1, session: 1, collegeCode: 1 }, { unique: true });
-
-// Compound index for date + branch queries
-scheduleSchema.index({ date: 1, 'branches.branchCode': 1, 'branches.year': 1 });
+// REMOVED ALL INDEXES - No indexing as requested
 
 // Virtual for formatted date
 scheduleSchema.virtual('formattedDate').get(function() {

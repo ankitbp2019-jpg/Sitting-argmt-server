@@ -4,8 +4,7 @@ const seatingPlanSchema = new mongoose.Schema({
   scheduleId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Schedule',
-    required: [true, 'Schedule reference is required'],
-    index: true
+    required: [true, 'Schedule reference is required']
   },
   date: {
     type: Date,
@@ -106,20 +105,11 @@ const seatingPlanSchema = new mongoose.Schema({
 }, {
   timestamps: true,
   toJSON: { virtuals: true },
-  toObject: { virtuals: true }
+  toObject: { virtuals: true },
+  autoIndex: false  // Disable automatic index creation - NO INDEXES
 });
 
-// Compound index for schedule uniqueness
-seatingPlanSchema.index({ scheduleId: 1 }, { unique: true });
-
-// Index for date-based queries
-seatingPlanSchema.index({ date: 1, session: 1 });
-
-// Compound index for seat lookups
-seatingPlanSchema.index({ 'seats.roomNumber': 1, 'seats.row': 1, 'seats.col': 1 });
-
-// Index for enrollment number lookups
-seatingPlanSchema.index({ 'seats.enrollmentNumber': 1 });
+// REMOVED ALL INDEXES - No indexing as requested
 
 // Virtual for formatted date
 seatingPlanSchema.virtual('formattedDate').get(function() {

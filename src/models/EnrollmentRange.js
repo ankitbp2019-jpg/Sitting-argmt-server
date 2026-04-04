@@ -45,14 +45,11 @@ const enrollmentRangeSchema = new mongoose.Schema({
 }, {
   timestamps: true,
   toJSON: { virtuals: true },
-  toObject: { virtuals: true }
+  toObject: { virtuals: true },
+  autoIndex: false  // Disable automatic index creation - NO INDEXES
 });
 
-// Compound index for uniqueness and faster queries
-enrollmentRangeSchema.index({ collegeCode: 1, branchCode: 1, year: 1 }, { unique: true });
-
-// Index for range queries
-enrollmentRangeSchema.index({ collegeCode: 1, branchCode: 1, year: 1, startRoll: 1, endRoll: 1 });
+// REMOVED ALL INDEXES - No indexing as requested
 
 // Virtual for total students
 enrollmentRangeSchema.virtual('totalStudents').get(function() {
